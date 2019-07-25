@@ -1,4 +1,4 @@
-const { dummy, totalLikes, favoriteBlog } = require('../../utils/list_helper');
+const { dummy, totalLikes, favoriteBlog, mostBlogs, mostLikes } = require('../../utils/list_helper');
 
 const fakeBlogs = [{
   title: 'foo1',
@@ -9,18 +9,18 @@ const fakeBlogs = [{
   title: 'foo2',
   author: 'bar2',
   url: 'https://foo2.bar',
-  likes: 4
+  likes: 7
 
 }, {
   title: 'foo3',
-  author: 'bar3',
+  author: 'bar1',
   url: 'https://foo3.bar',
-  likes: 7
+  likes: 2
 }, {
   title: 'foo4',
   author: 'bar4',
   url: 'https://foo4.bar',
-  likes: 0
+  likes: 2
 }];
 
 describe('dummy util', () => {
@@ -56,7 +56,46 @@ describe('favorite blog', () => {
   });
 
   test('should return greatest blog of all blogs', () => {
-    const expectedTitle = 'foo3';
+    const expectedTitle = 'foo2';
     expect(favoriteBlog(fakeBlogs).title).toBe(expectedTitle);
+  });
+});
+
+describe('most blogs', () => {
+  test('should return undefined when no blogs', () => {
+    expect(mostBlogs([])).toBe(undefined);
+  });
+
+  test('should return single blog author', () => {
+    expect(mostBlogs([{ author: 'foo' }])).toEqual({ author: 'foo', blogs: 1});
+  });
+
+  test('should return author with most blogs', () => {
+    const expectedAuthor = 'bar1';
+    const expectedCount = 2;
+    expect(mostBlogs(fakeBlogs)).toEqual({ author: expectedAuthor, blogs: expectedCount });
+  });
+});
+
+describe('most likes', () => {
+  test('should return undefined when no blogs', () => {
+    expect(mostLikes([])).toBe(undefined);
+  });
+
+  test('should return single blog author', () => {
+    expect(mostLikes([{ author: 'foo', likes: 12, title: 'bar' }])).toEqual({ author: 'foo', likes: 12 });
+  });
+
+  test('should return author with most blogs', () => {
+    const expectedAuthor = 'bar2';
+    const expectedCount = 7;
+    expect(mostLikes(fakeBlogs)).toEqual({ author: expectedAuthor, likes: expectedCount });
+  });
+
+  test('should sum up likes correctly', () => {
+    const expectedAuthor = 'bar1';
+    const testBlogs = fakeBlogs.concat({ author: expectedAuthor, likes: 11 });
+    const expectedCount = 16;
+    expect(mostLikes(testBlogs)).toEqual({ author: expectedAuthor, likes: expectedCount });
   });
 });
