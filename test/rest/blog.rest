@@ -1,0 +1,15 @@
+POST http://localhost:3001/api/blogs
+Content-Type: application/json
+User-Agent: vscode-restclient
+Accept-Encoding: gzip
+
+{
+  "title": "Onko foo baria parempi?",
+  "author": "Jukka Palmu",
+  "url": "https://foo.bar",
+  "likes": 10
+}
+###
+GET http://localhost:3001/api/blogs
+Accept-Encoding: application/json
+User-Agent: vscode-restclient
