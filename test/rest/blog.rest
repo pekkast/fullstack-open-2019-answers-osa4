@@ -4,7 +4,7 @@ User-Agent: vscode-restclient
 Accept-Encoding: gzip
 
 {
-  "title": "Onko foo baria parempi?",
+  "title": "Entä bar foota?",
   "author": "Jukka Palmu",
   "url": "https://foo.bar",
   "likes": 10
