@@ -42,13 +42,13 @@ test('should be able to create blog', async () => {
     .expect(201);
 
   const itemUrl = response.get('location');
-  const urlParts = itemUrl.split('/');
+  const id = itemUrl.split('/').pop();
 
   const blogResponse = await api
     .get(itemUrl)
     .expect(200);
 
-  expect(blogResponse.body).toEqual({ id: urlParts.pop(), ...blog });
+  expect(blogResponse.body).toEqual({ id, ...blog });
 
   // Add test that was required, though redundant
   const blogsResponse = await api.get('/api/blogs');
@@ -98,6 +98,57 @@ test('should return 400 for missing url', async () => {
     .post('/api/blogs')
     .send(blog)
     .expect(400);
+});
+
+test('should successfully delete blog', async () => {
+  const blog = {
+    title: 'Elämän sietämätön keveys delete',
+    author: 'Tuumaileva Tauno',
+    url: 'https://sietokyky.fi',
+    likes: 5,
+  };
+
+  // Arrange - create
+  const response = await api
+    .post('/api/blogs')
+    .send(blog)
+    .expect(201);
+
+  const itemUrl = response.get('location');
+
+  // Act - delete
+  await api.delete(itemUrl).expect(204);
+
+  // Assert - not found
+  await api.get(itemUrl).expect(404);
+});
+
+test('should update blog likes', async () => {
+  const blog = {
+    title: 'Elämän sietämätön keveys delete',
+    author: 'Tuumaileva Tauno',
+    url: 'https://sietokyky.fi',
+    likes: 5,
+  };
+
+  // Arrange - create
+  const response = await api
+    .post('/api/blogs')
+    .send(blog)
+    .expect(201);
+
+  const itemUrl = response.get('location');
+  const likes = blog.likes + 2;
+
+  // Act - update likes
+  await api
+    .patch(itemUrl)
+    .send({ likes })
+    .expect(204);
+
+  // Assert
+  const blogResponse = await api.get(itemUrl).expect(200);
+  expect(blogResponse.body.likes).toBe(likes);
 });
 
 afterAll(() => {
