@@ -1,57 +1,52 @@
 const blogsController = require('express').Router();
 const Blog = require('../models/blog');
 
-blogsController.get('/', (request, response) => {
-  Blog
-    .find({})
-    .then(blogs => {
-      response.json(blogs);
-    });
+blogsController.get('/', async (request, response) => {
+  const blogs = await Blog.find({});
+  response.json(blogs);
 });
 
-blogsController.get('/:id', (request, response) => {
-  Blog
-    .findById(request.params.id)
-    .then(blog => {
-      if (blog !== null) {
-        response.json(blog);
-      }
-
-      response.status(404).end();
-    });
+blogsController.get('/:id', async (request, response) => {
+  const blog = await Blog.findById(request.params.id);
+  if (blog === null) {
+    return response.status(404).end();
+  }
+  response.json(blog);
 });
 
-blogsController.delete('/:id', (request, response) => {
-  Blog
-    .findByIdAndDelete(request.params.id)
-    .then(() => {
-      response.status(204).end();
-    });
+blogsController.delete('/:id', async (request, response, next) => {
+  try {
+    await Blog.findByIdAndDelete(request.params.id);
+    response.status(204).end();
+  } catch (err) {
+    next(err);
+  }
 });
 
-blogsController.patch('/:id', (request, response) => {
-  Blog
-    .findByIdAndUpdate(request.params.id, { likes: request.body.likes })
-    .then(() => {
-      response.status(204).end();
-    });
+blogsController.patch('/:id', async (request, response, next) => {
+  try {
+    await Blog.findByIdAndUpdate(request.params.id, { likes: request.body.likes });
+    response.status(204).end();
+  } catch (err) {
+    next(err);
+  }
 });
 
-blogsController.post('/', (request, response, next) => {
+blogsController.post('/', async (request, response, next) => {
   const blog = new Blog(request.body);
   if (isNaN(blog.likes)) {
     blog.likes = 0;
   }
 
-  blog
-    .save()
-    .then(result => {
-      response
-        .status(201)
-        .header('location', request.originalUrl + '/' + result.id)
-        .end();
-    })
-    .catch(err => next(err));
+  try {
+    const result = await blog.save();
+    response
+      .status(201)
+      .header('location', request.originalUrl + '/' + result.id)
+      .end();
+  } catch(err) {
+    next(err);
+  }
 });
 
 module.exports = blogsController;
