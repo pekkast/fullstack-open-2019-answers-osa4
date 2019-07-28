@@ -1,8 +1,9 @@
 const blogsController = require('express').Router();
 const Blog = require('../models/blog');
+const User = require('../models/user');
 
 blogsController.get('/', async (request, response) => {
-  const blogs = await Blog.find({});
+  const blogs = await Blog.find({}).populate('user', { username: 1, name: 1, id: 1 });
   response.json(blogs);
 });
 
@@ -33,16 +34,26 @@ blogsController.patch('/:id', async (request, response, next) => {
 });
 
 blogsController.post('/', async (request, response, next) => {
-  const blog = new Blog(request.body);
-  if (isNaN(blog.likes)) {
-    blog.likes = 0;
-  }
+  const data = request.body;
+  // Get creating user
+  const user = (await User.find({}))[0];
+
+  const blog = new Blog({
+    title: data.title,
+    url: data.url,
+    author: data.author,
+    likes: isNaN(data.likes) ? 0 : data.likes,
+    user: user._id,
+  });
 
   try {
     const result = await blog.save();
+    user.blogs = user.blogs.concat(result._id);
+    await user.save();
+
     response
       .status(201)
-      .header('location', request.originalUrl + '/' + result.id)
+      .header('location', request.originalUrl + '/' + result._id)
       .end();
   } catch(err) {
     next(err);

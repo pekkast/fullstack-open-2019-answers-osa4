@@ -4,10 +4,10 @@ User-Agent: vscode-restclient
 Accept-Encoding: gzip
 
 {
-  "title": "Entä bar foota?",
-  "author": "Jukka Palmu",
-  "url": "https://foo.bar",
-  "likes": 10
+  "title": "Blogi myös käyttäjän tietoihin?",
+  "author": "Jukka Palmukoppa",
+  "url": "https://foo.bar.fi",
+  "likes": 3
 }
 ###
 GET http://localhost:3001/api/blogs

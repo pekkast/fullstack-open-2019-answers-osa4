@@ -7,6 +7,12 @@ const userSchema = mongoose.Schema({
   name: { type: String, required: true },
   username: { type: String, required: true, unique: true, minlength: 3 },
   passwordHash: { type: String, required: true },
+  blogs: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Blog'
+    }
+  ],
 });
 
 userSchema.plugin(uniqueValidator);
@@ -17,6 +23,7 @@ userSchema.set('toJSON', {
     id: doc._id.toString(),
     name: doc.name,
     username: doc.username,
+    blogs: doc.blogs
   }),
 });
 
