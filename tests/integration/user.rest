@@ -1,0 +1,14 @@
+POST http://localhost:3001/api/users
+Content-Type: application/json
+User-Agent: vscode-restclient
+Accept-Encoding: gzip
+
+{
+  "username": "palmjuk",
+  "name": "Jukka Palmu",
+  "password": "foo.bar"
+}
+###
+GET http://localhost:3001/api/users
+Accept-Encoding: application/json
+User-Agent: vscode-restclient
