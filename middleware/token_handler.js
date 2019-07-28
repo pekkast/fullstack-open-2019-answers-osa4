@@ -5,8 +5,14 @@ const tokenHandler = (request, response, next) => {
   if (request.method.toLowerCase() === 'get') {
     return next();
   }
+
   // Allow anonymous login & signup etc
   if (request.path.startsWith('/api/auth')) {
+    return next();
+  }
+
+  // Enable updating likes without authentication
+  if (request.method.toLowerCase() === 'patch' && request.path.startsWith('/api/blogs')) {
     return next();
   }
 

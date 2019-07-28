@@ -17,7 +17,11 @@ blogsController.get('/:id', async (request, response) => {
 
 blogsController.delete('/:id', async (request, response, next) => {
   try {
-    await Blog.findByIdAndDelete(request.params.id);
+    const blog = await Blog.findById(request.params.id);
+    if (blog.user.toString() !== request.token.id) {
+      return response.status(403).json({ error: 'Only user that created the item may delete it' });
+    }
+    await blog.remove();
     response.status(204).end();
   } catch (err) {
     next(err);
@@ -36,8 +40,10 @@ blogsController.patch('/:id', async (request, response, next) => {
 blogsController.post('/', async (request, response, next) => {
   const data = request.body;
   // Get creating user
-  const user = (await User.find({}))[0];
-
+  const user = await User.findById(request.token.id);
+  if (user === null) {
+    return response.status(400).json({ error: 'creating user not found' });
+  }
   const blog = new Blog({
     title: data.title,
     url: data.url,

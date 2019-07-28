@@ -2,16 +2,21 @@ const mongoose = require('mongoose');
 const supertest = require('supertest');
 const app = require('../../app');
 const User = require('../../models/user');
+const testHelper = require('../test_helper');
 const api = supertest(app);
+const authUser = 'root';
+const authPw = 'testpassword';
+let authToken;
 
-beforeEach(async () => {
-  await User.deleteMany({})
-  await User.insertMany([{
-    username: 'root',
-    name: 'Käyttäjä Juuri',
-    passwordHash: 'hassiissss'
-  }]);
-})
+beforeAll(async () => {
+  await User.deleteMany({});
+  authToken = await testHelper.getAuthToken(authUser, authPw);
+});
+
+const authApi = (request, token) => {
+  token = token || authToken;
+  return request.set('Authorization', 'Bearer ' + token);
+};
 
 test('should be able to create user', async () => {
   const user = {
@@ -20,8 +25,7 @@ test('should be able to create user', async () => {
     password: 'fooobaarrfoo'
   };
 
-  const response = await api
-    .post('/api/users')
+  const response = await authApi(api.post('/api/users'))
     .send(user)
     .expect(201);
 
@@ -36,6 +40,7 @@ test('should be able to create user', async () => {
       id: itemUrl.split('/').pop(),
       username: user.username,
       name: user.name,
+      blogs: [],
     });
 });
 
@@ -46,8 +51,7 @@ test('should have error if too short username', async () => {
     password: 'fooobaarrfoo'
   };
 
-  const response = await api
-    .post('/api/users')
+  const response = await authApi(api.post('/api/users'))
     .send(user)
     .expect(400)
     .expect('Content-Type', /application\/json/)
@@ -62,8 +66,7 @@ test('should have error if username not unique', async () => {
     password: 'fooobaarrfoo'
   };
 
-  const response = await api
-    .post('/api/users')
+  const response = await authApi(api.post('/api/users'))
     .send(user)
     .expect(400)
     .expect('Content-Type', /application\/json/)
@@ -78,8 +81,7 @@ test('should have error if too short password', async () => {
     password: 'fo'
   };
 
-  const response = await api
-    .post('/api/users')
+  const response = await authApi(api.post('/api/users'))
     .send(user)
     .expect(400)
     .expect('Content-Type', /application\/json/)

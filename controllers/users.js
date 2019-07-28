@@ -1,5 +1,5 @@
-const bcrypt = require('bcrypt');
 const usersController = require('express').Router();
+const passwordHelper = require('../utils/password_helper');
 const User = require('../models/user');
 
 usersController.get('/', async (request, response) => {
@@ -28,13 +28,10 @@ usersController.post('/', async (request, response, next) => {
       .json({ error: 'Salasanan minimipituus 3 merkkiä' });
   }
 
-  const saltRounds = 10;
-  const passwordHash = await bcrypt.hash(password, saltRounds);
-
   try {
     const user = await new User({
         username,
-        passwordHash,
+        passwordHash: await passwordHelper.hash(password),
         name,
     }).save();
 

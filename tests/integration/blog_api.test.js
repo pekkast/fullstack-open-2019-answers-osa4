@@ -2,9 +2,22 @@ const mongoose = require('mongoose');
 const supertest = require('supertest');
 const app = require('../../app');
 const Blog = require('../../models/blog');
+const testHelper = require('../test_helper');
 const api = supertest(app);
 
 const initialBlogs = require('../setup/blogs');
+const authUser = 'testuser';
+const authPw = 'testpassword';
+let authToken;
+
+beforeAll(async () => {
+  authToken = await testHelper.getAuthToken(authUser, authPw);
+});
+
+const authApi = (request, token)  => {
+  token = token || authToken;
+  return request.set('Authorization', 'Bearer ' + token);
+};
 
 beforeEach(async () => {
   await Blog.deleteMany({})
@@ -28,6 +41,10 @@ test('has id defined', async () => {
   expect(response.body[0].id).toBeDefined();
 });
 
+test('should not allow to post unauthenticated', async () => {
+  await api.post('/api/blogs').expect(401);
+});
+
 test('should be able to create blog', async () => {
   const blog = {
     title: 'Elämän sietämätön keveys',
@@ -36,8 +53,7 @@ test('should be able to create blog', async () => {
     likes: 4,
   };
 
-  const response = await api
-    .post('/api/blogs')
+  const response = await authApi(api.post('/api/blogs'))
     .send(blog)
     .expect(201);
 
@@ -48,7 +64,7 @@ test('should be able to create blog', async () => {
     .get(itemUrl)
     .expect(200);
 
-  expect(blogResponse.body).toEqual({ id, ...blog });
+  expect(blogResponse.body).toEqual({ id, ...blog, user: testHelper.getTokenUserId(authToken) });
 
   // Add test that was required, though redundant
   const blogsResponse = await api.get('/api/blogs');
@@ -62,8 +78,7 @@ test('should set empty likes to 0', async () => {
     url: 'https://sietokyky.fi',
   };
 
-  const response = await api
-    .post('/api/blogs')
+  const response = await authApi(api.post('/api/blogs'))
     .send(blog)
     .expect(201);
 
@@ -82,8 +97,7 @@ test('should return 400 for missing title', async () => {
     url: 'https://sietokyky.fi',
   };
 
-  await api
-    .post('/api/blogs')
+  await authApi(api.post('/api/blogs'))
     .send(blog)
     .expect(400);
 });
@@ -94,8 +108,7 @@ test('should return 400 for missing url', async () => {
     author: 'Tuumaileva Tauno',
   };
 
-  await api
-    .post('/api/blogs')
+  await authApi(api.post('/api/blogs'))
     .send(blog)
     .expect(400);
 });
@@ -109,19 +122,43 @@ test('should successfully delete blog', async () => {
   };
 
   // Arrange - create
-  const response = await api
-    .post('/api/blogs')
+  const response = await authApi(api.post('/api/blogs'))
     .send(blog)
     .expect(201);
 
   const itemUrl = response.get('location');
 
   // Act - delete
-  await api.delete(itemUrl).expect(204);
+  await authApi(api.delete(itemUrl)).expect(204);
 
   // Assert - not found
   await api.get(itemUrl).expect(404);
 });
+
+test('should allow delete only for owner', async () => {
+  const blog = {
+    title: 'Elämän sietämätön keveys delete cant',
+    author: 'Tuumaileva Tauno',
+    url: 'https://sietokyky.fi',
+    likes: 5,
+  };
+
+  const otherToken = await testHelper.getAuthToken('fooUser', 'authPw');
+
+  // Arrange - create
+  const response = await authApi(api.post('/api/blogs'), otherToken)
+    .send(blog)
+    .expect(201);
+
+  const itemUrl = response.get('location');
+
+  // Act - delete
+  await authApi(api.delete(itemUrl)).expect(403);
+
+  // Assert - found
+  await api.get(itemUrl).expect(200);
+});
+
 
 test('should update blog likes', async () => {
   const blog = {
@@ -132,8 +169,7 @@ test('should update blog likes', async () => {
   };
 
   // Arrange - create
-  const response = await api
-    .post('/api/blogs')
+  const response = await authApi(api.post('/api/blogs'))
     .send(blog)
     .expect(201);
 

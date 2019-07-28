@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
 const authController = require('express').Router();
+const passwordHelper = require('../utils/password_helper');
 const User = require('../models/user');
 
 authController.post('/login', async (request, response) => {
@@ -9,7 +9,7 @@ authController.post('/login', async (request, response) => {
   const user = await User.findOne({ username: data.username });
   const passwordCorrect = user === null
     ? false
-    : await bcrypt.compare(data.password, user.passwordHash);
+    : await passwordHelper.validate(data.password, user.passwordHash);
 
   if (!passwordCorrect) {
     return response.status(401).json({
