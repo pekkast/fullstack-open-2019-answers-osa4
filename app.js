@@ -10,7 +10,7 @@ const usersController = require('./controllers/users');
 const errorHandler = require('./middleware/error_handler');
 const tokenHandler = require('./middleware/token_handler');
 
-mongoose.connect(config.MONGODB_URI, { useNewUrlParser: true });
+mongoose.connect(config.MONGODB_URI, { useNewUrlParser: true, useCreateIndex: true, useFindAndModify: false, useUnifiedTopology: true });
 
 app.use(cors());
 app.use(tokenHandler);
